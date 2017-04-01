@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.ojai.Document;
 import org.ojai.DocumentStream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.mapr.db.MapRDB;
 import com.mapr.db.Table;
+import com.mapr.db.exceptions.TableClosedException;
 
 import retail.data.User;
 import retail.util.MapRJsonDBHelper;
@@ -20,16 +23,23 @@ import retail.util.MapRJsonDBHelper;
 @Component
 public class UserDAO {
 
-	@Autowired
-	private Environment env;
-	@Autowired
-	private MapRJsonDBHelper dbHelper;
+	@Autowired private Environment env;
+	@Autowired private MapRJsonDBHelper dbHelper;
 
 	private Table userTable;
-
-	public List<User> list() {
+	
+	@PostConstruct
+	public void getTableHandler(){
 		try {
 			userTable = dbHelper.getTable(env.getProperty("user.table.name"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public List<User> list() {
+			//userTable = dbHelper.getTable(env.getProperty("user.table.name"));
 			ArrayList<User> userList = new ArrayList<User>();
 			DocumentStream rs = userTable.find();
 			Iterator<Document> itrs = rs.iterator();
@@ -38,61 +48,33 @@ public class UserDAO {
 			}
 			rs.close();
 			return userList;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
-
 	}
 
 	public User get(String id) {
-		try {
-			userTable = dbHelper.getTable(env.getProperty("user.table.name"));
+			//userTable = dbHelper.getTable(env.getProperty("user.table.name"));
 			User user = userTable.findById(id).toJavaBean(User.class);
 			return user;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
-
-
 	}
 
 	public String create(User user) {
-		try {
-			userTable = dbHelper.getTable(env.getProperty("user.table.name"));
+			//userTable = dbHelper.getTable(env.getProperty("user.table.name"));
 			Document document = MapRDB.newDocument(user);
 			userTable.insertOrReplace(document);
 			userTable.flush();
 			return "user created successfully" ;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-			
-		}
-
 	}
 
 	public User delete(String userId) {
-		try {
-			userTable = dbHelper.getTable(env.getProperty("user.table.name"));
+			//userTable = dbHelper.getTable(env.getProperty("user.table.name"));
 			Document userDocument = userTable.findById(userId);
 			userTable.delete(userDocument);
 			userTable.flush();
 			return userDocument.toJavaBean(User.class);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+
 	}
 
 	public String update(User user) {
-		try {
-			userTable = dbHelper.getTable(env.getProperty("user.table.name"));
+			//userTable = dbHelper.getTable(env.getProperty("user.table.name"));
 			Document userDocument = userTable.findById(user.getId());
 			if(userDocument != null){
 				Document document = MapRDB.newDocument(user);
@@ -102,13 +84,6 @@ public class UserDAO {
 			}else{
 				return  null;
 			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-			
-		}
 	}
 
 }
